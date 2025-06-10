@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MyPrivate.Migrations
 {
     [DbContext(typeof(ContextATM))]
-    [Migration("20250605144919_Table Users")]
-    partial class TableUsers
+    [Migration("20250610131954_Add Tables")]
+    partial class AddTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,27 @@ namespace MyPrivate.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("MyPrivate.Data.Entitys.BalanceEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("numeric");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("tbl_Balances");
+                });
 
             modelBuilder.Entity("MyPrivate.Data.Entitys.UserEntity", b =>
                 {
@@ -56,6 +77,17 @@ namespace MyPrivate.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("tbl_Users");
+                });
+
+            modelBuilder.Entity("MyPrivate.Data.Entitys.BalanceEntity", b =>
+                {
+                    b.HasOne("MyPrivate.Data.Entitys.UserEntity", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }
