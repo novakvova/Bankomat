@@ -8,6 +8,8 @@ using System.Collections.Concurrent;
 using System.Net.Security;
 using MyPrivate.JSON_Converter;
 using MyPrivate.Data.Entitys;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Authentication;
 TcpListener tcpListener = new TcpListener(IPAddress.Any, 5000); // Listening on port 5000 | пам'ять виділяється динамічно
 const int MinIntervalMs = 5000; // Minimum interval between connections in milliseconds
 const int MaxConcurrentClients = 100; //максимальна к-сть клієнтів
