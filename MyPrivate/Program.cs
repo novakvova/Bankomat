@@ -17,7 +17,7 @@ IPEndPoint iP;
 DateTime now;
 tcpListener.Start();
 TcpClient client;
-Console.WriteLine($"Server started on port 5000. Waiting for connections...");
+Console.WriteLine($"Server started on {tcpListener.LocalEndpoint}. Waiting for connections...");
 while (true)
 {
     try
@@ -32,7 +32,7 @@ while (true)
 
         if (clientLastAccess.ContainsKey(iP))
         {
-            now = DateTime.Now;
+            now = DateTime.UtcNow;
 
             if (clientLastAccess.TryGetValue(iP, out DateTime lastAccess))
             {
@@ -54,7 +54,7 @@ while (true)
         }
         else
         {
-            clientLastAccess.TryAdd(iP, DateTime.Now); // Add new client with current time
+            clientLastAccess.TryAdd(iP, DateTime.UtcNow); // Add new client with current time
 
         }
         _ = HandleClientAsync(client).ContinueWith(_ => semaphoreSlim.Release()); // Start handling the client asynchronously
@@ -75,13 +75,9 @@ async Task HandleClientAsync(TcpClient client)
 
     try
     {
-
-        await sslStream.AuthenticateAsServerAsync(
-            new System.Security.Cryptography.X509Certificates.X509Certificate2("server.pfx", "password"),
-            false,
-            System.Security.Authentication.SslProtocols.Tls12,
-            true);
-
+        string certPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "server.pfx");
+        X509Certificate2 certificate = new X509Certificate2(certPath, "password"); // Replace with your certificate password
+        await sslStream.AuthenticateAsServerAsync(certificate, false, SslProtocols.Tls12, true);
         Console.WriteLine("Client connected: " + client.Client.RemoteEndPoint);
 
         byte[] buffer = new byte[1024];
