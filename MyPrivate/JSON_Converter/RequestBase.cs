@@ -10,7 +10,7 @@ namespace MyPrivate.JSON_Converter
 {
     public abstract class RequestBase
     {
-        public Int32 Type { get; set; } = 0; // Default type for the base request
+        public abstract Int32 Type { get; } // Abstract property to get the type of request
     }
     public class RequestBaseConverter : JsonConverter<RequestBase>
     {
