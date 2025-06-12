@@ -10,7 +10,8 @@ using MyPrivate.JSON_Converter;
 using MyPrivate.Data.Entitys;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
-TcpListener tcpListener = new TcpListener(IPAddress.Any, 5000); // Listening on port 5000 | пам'ять виділяється динамічно
+int port = 5000; // Port to listen on
+TcpListener tcpListener = new TcpListener(IPAddress.Any, port); // Listening on port 5000 | пам'ять виділяється динамічно
 const int MinIntervalMs = 5000; // Minimum interval between connections in milliseconds
 const int MaxConcurrentClients = 100; //максимальна к-сть клієнтів
 ConcurrentDictionary<IPEndPoint, DateTime> clientLastAccess = new(); //фіксація по публічним IP - адресам клієнтів
@@ -69,8 +70,8 @@ while (true)
 async Task HandleClientAsync(TcpClient client)
 {
     MyPrivate.Data.ContextATM context = new MyPrivate.Data.ContextATM();
-    NetworkStream networkStream = client.GetStream();
-    SslStream sslStream = new SslStream(networkStream, false); // Accept any certificate
+    using NetworkStream networkStream = client.GetStream();
+    using SslStream sslStream = new SslStream(networkStream, false); // Accept any certificate
     var json_options = new System.Text.Json.JsonSerializerOptions();
     json_options.Converters.Add(new MyPrivate.JSON_Converter.RequestBaseConverter());
     RequestBase? request = null;
