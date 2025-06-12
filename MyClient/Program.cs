@@ -5,25 +5,27 @@ using System.IO;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 
 
 int port = 5000;
+string serverIp = IPAddress.Loopback.ToString();
 TcpClient myClient = new TcpClient();
 
 
 try
 {
-	await myClient.ConnectAsync("127.0.0.1", port);
+	await myClient.ConnectAsync(IPAddress.Parse(serverIp), port);
 	SslStream stream = new(
 		myClient.GetStream(),
 			false,
-			new RemoteCertificateValidationCallback(ValidateServerCertificate),
+			ValidateServerCertificate,
 			null
 	);
-	await stream.AuthenticateAsClientAsync("127.0.0.1");
+	await stream.AuthenticateAsClientAsync(serverIp, null, SslProtocols.Tls12, false);
 	Console.WriteLine("Ви підключились до банкомату. ");
 	Console.WriteLine("Введіть запит (Баланс, Зняти, Покласти):");
 	string choice = Console.ReadLine().Trim().ToLower();
@@ -65,6 +67,7 @@ try
 catch (Exception ex)
 {
 	Console.WriteLine($"При підключенні до банкомату сталася помилка: {ex.Message}");
+	Console.WriteLine($"{ex.InnerException?.Message}");
 }
 finally
 {
@@ -73,20 +76,5 @@ finally
 
 static bool ValidateServerCertificate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors errors)
 {
-	if (errors == SslPolicyErrors.None)
-		return true;
-
-	string trustedThumbprint = "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"; 
-
-	if (cert != null)
-	{
-		string certThumbprint = cert.GetCertHashString();
-		if (certThumbprint.Equals(trustedThumbprint, StringComparison.OrdinalIgnoreCase))
-		{
-			return true; 
-		}
-	}
-
-	Console.WriteLine($"Помилка сертифіката: {errors}");
-	return false;
+	return true;
 }
