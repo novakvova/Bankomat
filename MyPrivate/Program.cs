@@ -15,6 +15,7 @@ TcpListener tcpListener = new TcpListener(IPAddress.Any, port); // Listening on 
 const int MinIntervalMs = 5000; // Minimum interval between connections in milliseconds
 const int MaxConcurrentClients = 100; //максимальна к-сть клієнтів
 ConcurrentDictionary<IPEndPoint, DateTime> clientLastAccess = new(); //фіксація по публічним IP - адресам клієнтів
+ConcurrentBag<IPEndPoint> bannedClients = new(); // Collection to store banned clients
 SemaphoreSlim semaphoreSlim = new SemaphoreSlim(MaxConcurrentClients); // Semaphore to control access to the shared resource
 IPEndPoint iP;
 DateTime now;
@@ -32,7 +33,20 @@ while (true)
         /// Check if the client is already connected or if the last access time is within the minimum interval
         /// 
         iP = client.Client.RemoteEndPoint as IPEndPoint; //зберігання IP-адреси клієнта
-
+        if(iP == null)
+        {
+            Console.WriteLine("Failed to retrieve client IP address.");
+            client.Close();
+            semaphoreSlim.Release(); // Release the semaphore slot
+            continue; // Skip processing this client
+        }
+        else if(bannedClients.Contains(iP)) // Check if the client is banned
+        {
+            Console.WriteLine($"Connection attempt from banned client: {iP}");
+            client.Close(); // Close the connection if the client is banned
+            semaphoreSlim.Release(); // Release the semaphore slot
+            continue; // Skip processing this client
+        }
         if (clientLastAccess.ContainsKey(iP))
         {
             now = DateTime.UtcNow;
@@ -66,6 +80,10 @@ while (true)
     {
         Console.WriteLine($"Error: {ex.Message}");
     }
+
+
+
+
 }//HandShake and SSL/TLS encryption
 async Task HandleClientAsync(TcpClient client)
 {
@@ -74,6 +92,7 @@ async Task HandleClientAsync(TcpClient client)
     using SslStream sslStream = new SslStream(networkStream, false); // Accept any certificate
     var json_options = new System.Text.Json.JsonSerializerOptions();
     json_options.Converters.Add(new MyPrivate.JSON_Converter.RequestBaseConverter());
+    int tryes = 0;
     RequestBase? request = null;
 
     try
@@ -88,6 +107,16 @@ async Task HandleClientAsync(TcpClient client)
         bool isAuthenticated = false; // Flag to check if the client is authenticated
 
         int bytesRead = client.ReceiveBufferSize;
+
+
+
+
+
+
+
+
+
+
         while (true)
         {
             bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
@@ -106,6 +135,7 @@ async Task HandleClientAsync(TcpClient client)
             }
             else
             {
+
                 if (request is RequestType1 request1)
                 {
                     if (context.Users.Any(u => u.CardNumber == request1.NumberCard))
@@ -121,7 +151,24 @@ async Task HandleClientAsync(TcpClient client)
                         await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
 
                     } // Example usage of request1
+                    else
+                    {
+                        var response = new RequestType0
+                        {
+                            Comment = "Card number does not exist",
+                            PassCode = 1789 // Example passcode for failed request
+                        };
+                        buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                        await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                        
+                    }
                 }
+
+
+
+
+
+
                 else if (request is RequestType2 request2)
                 {
                     if (user != null) // Ensure user is not null
@@ -144,9 +191,28 @@ async Task HandleClientAsync(TcpClient client)
                         }
                         else
                         {
+                            RequestType0 response;
+                            if(tryes >= 3)
+                            {
+                                // Block the client after 3 failed attempts
+                                bannedClients.Add(client.Client.RemoteEndPoint as IPEndPoint); // Add the client's IP to the banned list
+                                Console.WriteLine($"Client {client.Client.RemoteEndPoint as IPEndPoint} has been banned due to too many failed authentication attempts.");
+                                response = new RequestType0
+                                {
+                                    Comment = "You have been banned due to too many failed authentication attempts.",
+                                    PassCode = 1918 // Example passcode for failed request
+                                };
+                                user = null; // Clear user data since the client is banned
+
+                                buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                                await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                               
+                                break; // Exit the loop to stop processing this client
+                            }
+                            tryes++; // Increment the number of attempts
                             //тут треба надати три спроби, якщо клієнт не ввів правильні дані, то заблокувати його на сервері і не давати можливості авторизації
                             isAuthenticated = false; // Set authentication flag to false if the user data does not match
-                            var response = new RequestType0
+                            response = new RequestType0
                             {
                                 Comment = "Authentication failed",
                                 PassCode = 1939 // Example passcode for failed request
@@ -158,13 +224,25 @@ async Task HandleClientAsync(TcpClient client)
                     }
                     else
                     {
-                        //тут варто заблокувати клієнта бо він неправильно почав авторизацію згідно клієнтською программи
-
-                        //!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        bannedClients.Add(client.Client.RemoteEndPoint as IPEndPoint); // Add the client's IP to the banned list
+                        var response = new RequestType0
+                        {
+                            Comment = "User not found",
+                            PassCode = 1914 // Example passcode for failed request
+                        };
                         Console.WriteLine("User not found for RequestType2 processing.");
+                        buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                        await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                        break; 
                     }
-                    // ...
+                    
                 }
+
+
+
+
+
+
                 else if (request is RequestType3 request3)
                 {
                     if (user != null && isAuthenticated == true)
@@ -203,8 +281,18 @@ async Task HandleClientAsync(TcpClient client)
 
 
 
+
+
             }
         }
+
+
+
+
+
+
+
+
     }
     catch (Exception ex)
     {
