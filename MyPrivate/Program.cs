@@ -126,6 +126,7 @@ async Task HandleClientAsync(TcpClient client)
                 break; // Exit the loop if the client disconnects
             }
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
             Console.WriteLine($"Received message from {client.Client.RemoteEndPoint}: {message}");
             request = System.Text.Json.JsonSerializer.Deserialize<RequestBase>(message, json_options);
             if (request == null)
@@ -149,6 +150,7 @@ async Task HandleClientAsync(TcpClient client)
 
                         buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                         await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                        Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
 
                     } // Example usage of request1
                     else
@@ -160,7 +162,8 @@ async Task HandleClientAsync(TcpClient client)
                         };
                         buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                         await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
-                        
+                        Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
+
                     }
                 }
 
@@ -187,6 +190,7 @@ async Task HandleClientAsync(TcpClient client)
                             };
                             buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                             await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                            Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
 
                         }
                         else
@@ -206,7 +210,7 @@ async Task HandleClientAsync(TcpClient client)
 
                                 buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                                 await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
-                               
+                                Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
                                 break; // Exit the loop to stop processing this client
                             }
                             tryes++; // Increment the number of attempts
@@ -219,6 +223,7 @@ async Task HandleClientAsync(TcpClient client)
                             };
                             buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                             await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                            Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
                         }
 
                     }
@@ -233,6 +238,7 @@ async Task HandleClientAsync(TcpClient client)
                         Console.WriteLine("User not found for RequestType2 processing.");
                         buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                         await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                        Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
                         break; 
                     }
                     
@@ -262,6 +268,7 @@ async Task HandleClientAsync(TcpClient client)
                                 };
                                 buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                                 await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                                Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
                             }
                             else
                             {
@@ -272,6 +279,7 @@ async Task HandleClientAsync(TcpClient client)
                                 };
                                 buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                                 await sslStream.WriteAsync(buffer, 0, buffer.Length); // Send response back to client
+                                Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
                             }
                         }
 
