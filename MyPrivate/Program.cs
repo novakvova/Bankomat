@@ -102,7 +102,7 @@ async Task HandleClientAsync(TcpClient client)
         await sslStream.AuthenticateAsServerAsync(certificate, false, SslProtocols.Tls12, true);
         Console.WriteLine("Client connected: " + client.Client.RemoteEndPoint);
 
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[4096];
         UserEntity? user = null; // Initialize user variable//it is used to store user information if needed//keep it null until we receive a request that requires user data
         bool isAuthenticated = false; // Flag to check if the client is authenticated
 
