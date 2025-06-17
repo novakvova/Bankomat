@@ -48,7 +48,7 @@ try
 	string jsonRequest = JsonSerializer.Serialize(request);
 	byte[] data = Encoding.UTF8.GetBytes(jsonRequest);
 	await stream.WriteAsync(data, 0, data.Length);
-	await stream.FlushAsync();
+
 
 	byte[] buffer = new byte[4096];
 	int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
