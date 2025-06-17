@@ -1,5 +1,4 @@
-﻿using MyClient.JSON_Converter;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,10 +25,7 @@ namespace MyPrivate.JSON_Converter
                 0 => JsonSerializer.Deserialize<RequestType0>(root.GetRawText(), options),
                 1 => JsonSerializer.Deserialize<RequestType1>(root.GetRawText(), options),
                 2 => JsonSerializer.Deserialize<RequestType2>(root.GetRawText(), options),
-				3 => JsonSerializer.Deserialize<RequestType3>(root.GetRawText(), options),
-				4 => JsonSerializer.Deserialize<RequestType4>(root.GetRawText(), options),
-				5 => JsonSerializer.Deserialize<RequestType5>(root.GetRawText(), options),
-				_ => throw new NotSupportedException($"Unknown type: {type}")
+                _ => throw new NotSupportedException($"Unknown type: {type}")
             };
         }
 
