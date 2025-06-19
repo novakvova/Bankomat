@@ -261,6 +261,46 @@ async Task HandleClientAsync(TcpClient client)
                         }
                     }
                 }
+                else if (request is RequestType4 request4)
+                {
+                    if (user != null && isAuthenticated == true)
+                    {
+                        var balance = context.Balances.FirstOrDefault(c => c.UserId == user.Id);
+                        if (balance != null)
+                        {
+                            balance.Amount += request4.Sum;
+                            context.SaveChanges();
+                            var response = new RequestType0
+                            {
+                                Comment = "Deposit successful",
+                                PassCode = 1945
+                            };
+                            byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                            await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
+                        }
+                    }
+                }
+                else if (request is RequestType5 request5)
+                {
+                    if (user != null && isAuthenticated == true)
+                    {
+                        var balance = context.Balances.FirstOrDefault(c => c.UserId == user.Id);
+                        if (balance != null)
+                        {
+                            var response = new RequestType0
+                            {
+                                Comment = $"Your current balance is {balance.Amount}",
+                                PassCode = 1945
+                            };
+                            byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                            await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Unknown request type: {request.Type}");
+                }
             }
         }
     }
