@@ -116,6 +116,7 @@ async Task HandleClientAsync(TcpClient client)
                 break; // Exit the loop if the client disconnects
             }
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+            Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
             Console.WriteLine($"Received message from {client.Client.RemoteEndPoint}: {message}");
             request = System.Text.Json.JsonSerializer.Deserialize<RequestBase>(message, json_options);
             if (request == null)
