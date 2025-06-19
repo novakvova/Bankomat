@@ -1,15 +1,16 @@
-﻿using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using System;
-using System.Net;
-using System.IO;
-using System.Collections.Concurrent;
-using System.Net.Security;
+﻿using MyPrivate.Data.Entitys;
 using MyPrivate.JSON_Converter;
-using MyPrivate.Data.Entitys;
-using System.Security.Cryptography.X509Certificates;
+using System;
+using System.Collections.Concurrent;
+using System.IO;
+using System.Net;
+using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 int port = 5000; // Port to listen on
 TcpListener tcpListener = new TcpListener(IPAddress.Any, port); // Listening on port 5000 | пам'ять виділяється динамічно
 const int MinIntervalMs = 5000; // Minimum interval between connections in milliseconds
@@ -104,7 +105,7 @@ async Task HandleClientAsync(TcpClient client)
 
         UserEntity? user = null; // Initialize user variable
         bool isAuthenticated = false; // Flag to check if the client is authenticated
-
+        long currentcardnumber = 0;
         while (true)
         {
             // Виділяємо новий буфер для кожного запиту
@@ -128,18 +129,19 @@ async Task HandleClientAsync(TcpClient client)
             {
                 if (request is RequestType1 request1)
                 {
-                    if (context.Users.Any(u => u.CardNumber == request1.NumberCard))
-                    {
-                        user = context.Users.FirstOrDefault(u => u.CardNumber == request1.NumberCard);
-                        var response = new RequestType0
-                        {
-                            Comment = "Card number exists / Please enter PIB and PIN - code",
-                            PassCode = 1945
-                        };
-                        byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
-                        await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
-                    }
-                    else
+					currentcardnumber = request1.NumberCard;
+					user = context.Users.FirstOrDefault(u => u.CardNumber == currentcardnumber);
+					if (user != null)
+					{
+						var response = new RequestType0
+						{
+							Comment = "Card number exists / Please enter PIB and PIN - code",
+							PassCode = 1945
+						};
+						byte[] responseBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, json_options));
+						await sslStream.WriteAsync(responseBuffer);
+					}
+					else
                     {
                         var response = new RequestType0
                         {
@@ -168,44 +170,63 @@ async Task HandleClientAsync(TcpClient client)
                         }
                         else
                         {
-                            RequestType0 response;
+                            tryes++;
                             if (tryes >= 3)
                             {
                                 bannedClients.Add(client.Client.RemoteEndPoint as IPEndPoint);
                                 Console.WriteLine($"Client {client.Client.RemoteEndPoint as IPEndPoint} has been banned due to too many failed authentication attempts.");
-                                response = new RequestType0
+                                var response = new RequestType0
                                 {
                                     Comment = "You have been banned due to too many failed authentication attempts.",
                                     PassCode = 1918
                                 };
-                                user = null;
                                 byte[] responseBuffer1 = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                                 await sslStream.WriteAsync(responseBuffer1, 0, responseBuffer1.Length);
                                 break;
                             }
-                            tryes++;
-                            isAuthenticated = false;
-                            response = new RequestType0
+                            else
                             {
-                                Comment = "Authentication failed",
-                                PassCode = 1939
-                            };
-                            byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
-                            await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
+                                var response = new RequestType0
+                                {
+                                    Comment = "Authentication failed",
+                                    PassCode = 1939
+                                };
+                                byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                                await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
+                            }
                         }
                     }
                     else
                     {
-                        bannedClients.Add(client.Client.RemoteEndPoint as IPEndPoint);
-                        var response = new RequestType0
+                        var new_user = new UserEntity
                         {
-                            Comment = "User not found",
-                            PassCode = 1914
+                            CardNumber = currentcardnumber,
+                            FirstName = request2.FirstName,
+                            LastName = request2.LastName,
+                            FatherName = request2.FatherName,
+                            PinCode = request2.PinCode,
+
                         };
-                        Console.WriteLine("User not found for RequestType2 processing.");
-                        byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
-                        await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
-                        break;
+						context.Users.Add(new_user);
+						context.SaveChanges();
+						var balance = new BalanceEntity
+						{
+							UserId = new_user.Id,
+							Amount = 0
+						};
+						context.Balances.Add(balance);
+						context.SaveChanges();
+
+						user = new_user;
+						isAuthenticated = true;
+
+						var response = new RequestType0
+						{
+							Comment = "Користувача зареєстровано успішно",
+							PassCode = 1945
+						};
+						byte[] responseBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, json_options));
+						await sslStream.WriteAsync(responseBuffer);
                     }
                 }
                 else if (request is RequestType3 request3)
