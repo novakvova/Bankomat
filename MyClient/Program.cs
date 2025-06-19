@@ -12,6 +12,8 @@ using System.Text.Json;
 using MyPrivate.JSON_Converter;
 using MyClient.JSON_Converter;
 
+Console.InputEncoding = Encoding.UTF8;
+Console.OutputEncoding = Encoding.UTF8;
 
 int port = 5000;
 string serverIp = IPAddress.Loopback.ToString();
@@ -51,7 +53,42 @@ try
 	else if (response1.PassCode == 1789)
 	{
 		Console.WriteLine("Картку не знайдено");
-		return;
+		Console.WriteLine("Чи хочете ви зареєструватись(yes/no)?");
+		var choice = Console.ReadLine();
+		if(choice?.ToLower() == "yes")
+		{
+			Console.Write("Введіть нове Ім’я: "); 
+			string firstName = Console.ReadLine();
+			Console.Write("Введіть нове Прізвище: ");
+			string lastName = Console.ReadLine();
+			Console.Write("Введіть нове По-батькові: ");
+			string fatherName = Console.ReadLine();
+			Console.Write("Введіть новий PIN-код: ");
+			if (!long.TryParse(Console.ReadLine(), out long pinCode))
+			{
+				Console.WriteLine("Невірний формат PIN-коду.");
+				return;
+			}
+			var register = new RequestType2
+			{
+				FirstName = firstName,
+				LastName = lastName,
+				FatherName = fatherName,
+				PinCode = pinCode
+			};
+			var resp = await RequestAsync(stream, register, options);
+			PrintResponse(resp);
+			if (resp?.PassCode != 1945)
+			{
+				return;
+			}
+				
+		}
+		else
+		{
+			return;
+		}
+			
 	}
 	else if (response1.PassCode != 1945)
 	{
@@ -62,14 +99,29 @@ try
 	{
 		Console.Write("Введіть ваше Ім’я: ");
 		string firstName = Console.ReadLine();
+		if (string.IsNullOrEmpty(firstName))
+        {
+            Console.WriteLine("Ім'я не може бути порожнім.");
+			return;
+        }
 
-		Console.Write("Введіть ваше Прізвище: ");
+        Console.Write("Введіть ваше Прізвище: ");
 		string lastName = Console.ReadLine();
+        if (string.IsNullOrEmpty(lastName))
+        {
+            Console.WriteLine("Прізвище не може бути порожнім.");
+            return;
+        }
 
-		Console.Write("Введіть ваше По-батькові: ");
+        Console.Write("Введіть ваше По-батькові: ");
 		string fatherName = Console.ReadLine();
+        if (string.IsNullOrEmpty(fatherName))
+        {
+            Console.WriteLine("По-батькові не може бути порожнім.");
+            return;
+        }
 
-		Console.Write("Введіть ваш PIN-код: ");
+        Console.Write("Введіть ваш PIN-код: ");
 		if (!long.TryParse(Console.ReadLine(), out long pinCode))
 		{
 			Console.WriteLine("Неправильний формат PIN-коду.");
@@ -114,7 +166,7 @@ try
 		Console.Write("->_ ");
 		string choice = Console.ReadLine();
 
-		if (choice == "0") break;
+		if (choice == "4") break;
 
 		else if (choice == "1")
 		{
@@ -189,7 +241,7 @@ static void PrintResponse(ServerResponse? response)
 		return;
 	}
 
-	Console.WriteLine($"\n Відповідь сервера: {response.Comment} (Код відповіді: {response.PassCode})");
+	Console.WriteLine($"\n{response.Comment}");
 	switch (response.PassCode)
 	{
 		case 1945:
