@@ -53,7 +53,42 @@ try
 	else if (response1.PassCode == 1789)
 	{
 		Console.WriteLine("Картку не знайдено");
-		return;
+		Console.WriteLine("Чи хочете ви зареєструватись(yes/no)?");
+		var choice = Console.ReadLine();
+		if(choice?.ToLower() == "yes")
+		{
+			Console.Write("Введіть нове Ім’я: "); 
+			string firstName = Console.ReadLine();
+			Console.Write("Введіть нове Прізвище: ");
+			string lastName = Console.ReadLine();
+			Console.Write("Введіть нове По-батькові: ");
+			string fatherName = Console.ReadLine();
+			Console.Write("Введіть новий PIN-код: ");
+			if (!long.TryParse(Console.ReadLine(), out long pinCode))
+			{
+				Console.WriteLine("Невірний формат PIN-коду.");
+				return;
+			}
+			var register = new RequestType2
+			{
+				FirstName = firstName,
+				LastName = lastName,
+				FatherName = fatherName,
+				PinCode = pinCode
+			};
+			var resp = await RequestAsync(stream, register, options);
+			PrintResponse(resp);
+			if (resp?.PassCode != 1945)
+			{
+				return;
+			}
+				
+		}
+		else
+		{
+			return;
+		}
+			
 	}
 	else if (response1.PassCode != 1945)
 	{
@@ -116,7 +151,7 @@ try
 		Console.Write("->_ ");
 		string choice = Console.ReadLine();
 
-		if (choice == "0") break;
+		if (choice == "4") break;
 
 		else if (choice == "1")
 		{
