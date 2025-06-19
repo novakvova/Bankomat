@@ -10,6 +10,7 @@ using MyPrivate.JSON_Converter;
 using MyPrivate.Data.Entitys;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
+using MyClient.JSON_Converter;
 int port = 5000; // Port to listen on
 TcpListener tcpListener = new TcpListener(IPAddress.Any, port); // Listening on port 5000 | пам'ять виділяється динамічно
 const int MinIntervalMs = 5000; // Minimum interval between connections in milliseconds
@@ -87,6 +88,7 @@ while (true)
 }//HandShake and SSL/TLS encryption
 async Task HandleClientAsync(TcpClient client)
 {
+
     MyPrivate.Data.ContextATM context = new MyPrivate.Data.ContextATM();
     using NetworkStream networkStream = client.GetStream();
     using SslStream sslStream = new SslStream(networkStream, false); // Accept any certificate
@@ -104,6 +106,8 @@ async Task HandleClientAsync(TcpClient client)
 
         UserEntity? user = null; // Initialize user variable
         bool isAuthenticated = false; // Flag to check if the client is authenticated
+        bool isGonnaRegister = false;// Flag to check if the client is going to register
+        long CardNumber; // Declarate card number variable
 
         while (true)
         {
@@ -116,7 +120,7 @@ async Task HandleClientAsync(TcpClient client)
                 break; // Exit the loop if the client disconnects
             }
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            
+
             Console.WriteLine($"Received message from {client.Client.RemoteEndPoint}: {message}");
             request = System.Text.Json.JsonSerializer.Deserialize<RequestBase>(message, json_options);
             if (request == null)
@@ -128,9 +132,10 @@ async Task HandleClientAsync(TcpClient client)
             {
                 if (request is RequestType1 request1)
                 {
-                    if (context.Users.Any(u => u.CardNumber == request1.NumberCard))
+                    user = SearchByCardNumber(request1.NumberCard); // Search for user by card number
+                    if (user != null)
                     {
-                        user = context.Users.FirstOrDefault(u => u.CardNumber == request1.NumberCard);
+                        
                         var response = new RequestType0
                         {
                             Comment = "Card number exists / Please enter PIB and PIN - code",
@@ -146,6 +151,9 @@ async Task HandleClientAsync(TcpClient client)
                             Comment = "Card number does not exist",
                             PassCode = 1789
                         };
+                        isGonnaRegister = true; // Set flag to indicate registration(user can to register)
+
+
                         byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
                         await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
                     }
@@ -240,6 +248,38 @@ async Task HandleClientAsync(TcpClient client)
                         }
                     }
                 }
+                else if (request is RequestType4 request4)
+                {
+
+                }
+                else if (request is RequestType5 request5)
+                {
+                    if (isGonnaRegister)
+                    {
+                        CardNumber = GetLatestUserRecord().CardNumber + 1; // Store the card number for registration
+                        user = new UserEntity
+                        {
+                            FirstName = request5.FirstName,
+                            LastName = request5.LastName,
+                            FatherName = request5.FatherName,
+                            CardNumber = CardNumber,
+                            PinCode = request5.PinCode
+                        };
+                        await AddUser(user); // Add the user to the database
+                        var response = new RequestType0
+                        {
+                            Comment = "Registration successful",
+                            PassCode = 1945
+                        };
+                        byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
+                        await sslStream.WriteAsync(responseBuffer, 0, responseBuffer.Length);
+                    }
+                }
+
+                else
+                {
+                    Console.WriteLine("Unknown request type received.");
+                }
             }
         }
     }
@@ -251,5 +291,27 @@ async Task HandleClientAsync(TcpClient client)
     {
         client.Close();
         Console.WriteLine("Client disconnected: " + client.Client.RemoteEndPoint);
+
+        // To safely retrieve the latest record in a multithreaded environment, use a thread-safe approach like locking or atomic operations.
+
     }
+
+}
+UserEntity GetLatestUserRecord()
+{
+    using MyPrivate.Data.ContextATM context = new MyPrivate.Data.ContextATM();
+    return context.Users.OrderByDescending(u => u.Id).FirstOrDefault();
+    
+}
+async Task AddUser(UserEntity user)
+{
+    using MyPrivate.Data.ContextATM context = new MyPrivate.Data.ContextATM();
+    context.Users.Add(user);
+    await context.SaveChangesAsync();
+
+}
+UserEntity? SearchByCardNumber(long CardNumber)
+{
+    using MyPrivate.Data.ContextATM context = new MyPrivate.Data.ContextATM();
+    return  context.Users.FirstOrDefault(u => u.CardNumber == CardNumber);
 }
