@@ -12,6 +12,8 @@ using System.Text.Json;
 using MyPrivate.JSON_Converter;
 using MyClient.JSON_Converter;
 
+Console.InputEncoding = Encoding.UTF8;
+Console.OutputEncoding = Encoding.UTF8;
 
 int port = 5000;
 string serverIp = IPAddress.Loopback.ToString();
