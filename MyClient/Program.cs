@@ -99,14 +99,29 @@ try
 	{
 		Console.Write("Введіть ваше Ім’я: ");
 		string firstName = Console.ReadLine();
+		if (string.IsNullOrEmpty(firstName))
+        {
+            Console.WriteLine("Ім'я не може бути порожнім.");
+			return;
+        }
 
-		Console.Write("Введіть ваше Прізвище: ");
+        Console.Write("Введіть ваше Прізвище: ");
 		string lastName = Console.ReadLine();
+        if (string.IsNullOrEmpty(lastName))
+        {
+            Console.WriteLine("Прізвище не може бути порожнім.");
+            return;
+        }
 
-		Console.Write("Введіть ваше По-батькові: ");
+        Console.Write("Введіть ваше По-батькові: ");
 		string fatherName = Console.ReadLine();
+        if (string.IsNullOrEmpty(fatherName))
+        {
+            Console.WriteLine("По-батькові не може бути порожнім.");
+            return;
+        }
 
-		Console.Write("Введіть ваш PIN-код: ");
+        Console.Write("Введіть ваш PIN-код: ");
 		if (!long.TryParse(Console.ReadLine(), out long pinCode))
 		{
 			Console.WriteLine("Неправильний формат PIN-коду.");
@@ -226,7 +241,7 @@ static void PrintResponse(ServerResponse? response)
 		return;
 	}
 
-	Console.WriteLine($"\n Відповідь сервера: {response.Comment} (Код відповіді: {response.PassCode})");
+	Console.WriteLine($"\n{response.Comment}");
 	switch (response.PassCode)
 	{
 		case 1945:
