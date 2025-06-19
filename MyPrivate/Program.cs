@@ -10,6 +10,10 @@ using MyPrivate.JSON_Converter;
 using MyPrivate.Data.Entitys;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Authentication;
+
+Console.InputEncoding = Encoding.UTF8; // Set console input encoding to UTF-8
+Console.OutputEncoding = Encoding.UTF8; // Set console output encoding to UTF-8
+
 int port = 5000; // Port to listen on
 TcpListener tcpListener = new TcpListener(IPAddress.Any, port); // Listening on port 5000 | пам'ять виділяється динамічно
 const int MinIntervalMs = 5000; // Minimum interval between connections in milliseconds
