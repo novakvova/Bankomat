@@ -16,7 +16,8 @@ Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
 
 int port = 5000;
-string serverIp = IPAddress.Loopback.ToString();
+//string serverIp = IPAddress.Loopback.ToString();
+string serverIp = "18.185.184.246";
 TcpClient myClient = new TcpClient();
 
 
