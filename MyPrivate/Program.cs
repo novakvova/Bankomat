@@ -23,7 +23,7 @@ IPEndPoint iP;
 DateTime now;
 tcpListener.Start();
 TcpClient client;
-Console.WriteLine($"Server started on {tcpListener.LocalEndpoint}. Waiting for connections...");
+Console.WriteLine($"Сервер запущено на {tcpListener.LocalEndpoint}. Очікуємо клієнтів...");
 while (true)
 {
     try
@@ -37,14 +37,14 @@ while (true)
         iP = client.Client.RemoteEndPoint as IPEndPoint; //зберігання IP-адреси клієнта
         if (iP == null)
         {
-            Console.WriteLine("Failed to retrieve client IP address.");
+            Console.WriteLine("Не вдалося отримати IP-адресу клієнта.");
             client.Close();
             semaphoreSlim.Release(); // Release the semaphore slot
             continue; // Skip processing this client
         }
         else if (bannedClients.Contains(iP)) // Check if the client is banned
         {
-            Console.WriteLine($"Connection attempt from banned client: {iP}");
+            Console.WriteLine($"Спроба підключення від заблокованого клієнта: {iP}");
             client.Close(); // Close the connection if the client is banned
             semaphoreSlim.Release(); // Release the semaphore slot
             continue; // Skip processing this client
@@ -59,7 +59,7 @@ while (true)
                 if ((now - lastAccess).TotalMilliseconds < MinIntervalMs)
                 {
 
-                    Console.WriteLine("Connection attempt denied due to minimum interval restriction.");
+                    Console.WriteLine("Спробу підключення відхилено через обмеження мінімального інтервалу.");
 
                     client.Close();
 
@@ -80,7 +80,7 @@ while (true)
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error: {ex.Message}");
+        Console.WriteLine($"Помилка: {ex.Message}");
     }
 
 
@@ -114,39 +114,39 @@ async Task HandleClientAsync(TcpClient client)
             int bytesRead = await sslStream.ReadAsync(buffer, 0, buffer.Length);
             if (bytesRead == 0)
             {
-                Console.WriteLine("Client disconnected: " + client.Client.RemoteEndPoint);
+                Console.WriteLine("Клієнт відключився: " + client.Client.RemoteEndPoint);
                 break; // Exit the loop if the client disconnects
             }
             string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             Array.Clear(buffer, 0, buffer.Length); // Clear the buffer for the next read
-            Console.WriteLine($"Received message from {client.Client.RemoteEndPoint}: {message}");
+            Console.WriteLine($"Отримано повідомлення від користувача {client.Client.RemoteEndPoint}: {message}");
             request = System.Text.Json.JsonSerializer.Deserialize<RequestBase>(message, json_options);
             if (request == null)
             {
-                Console.WriteLine("Received null request, skipping processing.");
+                Console.WriteLine("Отримано нульовий запит, обробка пропущена.");
                 continue; // Skip processing if the request is null
             }
             else
             {
                 if (request is RequestType1 request1)
                 {
-					currentcardnumber = request1.NumberCard;
-					user = context.Users.FirstOrDefault(u => u.CardNumber == currentcardnumber);
-					if (user != null)
-					{
-						var response = new RequestType0
-						{
-							Comment = "Card number exists / Please enter PIB and PIN - code",
-							PassCode = 1945
-						};
-						byte[] responseBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, json_options));
-						await sslStream.WriteAsync(responseBuffer);
-					}
-					else
+                    currentcardnumber = request1.NumberCard;
+                    user = context.Users.FirstOrDefault(u => u.CardNumber == currentcardnumber);
+                    if (user != null)
                     {
                         var response = new RequestType0
                         {
-                            Comment = "Card number does not exist",
+                            Comment = "Номер картки існує. Будь ласка, введіть PIB та PIN-код",
+                            PassCode = 1945
+                        };
+                        byte[] responseBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, json_options));
+                        await sslStream.WriteAsync(responseBuffer);
+                    }
+                    else
+                    {
+                        var response = new RequestType0
+                        {
+                            Comment = "Такої карти не існує",
                             PassCode = 1789
                         };
                         byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -157,13 +157,14 @@ async Task HandleClientAsync(TcpClient client)
                 {
                     if (user != null)
                     {
-                        Console.WriteLine($"Processing RequestType2 for user: {user.FirstName} {user.LastName}");
+
+                        Console.WriteLine($"Обробка авторизації для користувача: {user.FirstName} {user.LastName}");
                         if ((user.FirstName.Equals(request2.FirstName)) && (user.FatherName.Equals(request2.FatherName)) && (user.LastName.Equals(request2.LastName) && (user.PinCode == request2.PinCode)))
                         {
                             isAuthenticated = true;
                             var response = new RequestType0
                             {
-                                Comment = "Authentication successful",
+                                Comment = "Авторизація успішна.",
                                 PassCode = 1945
                             };
                             byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -175,10 +176,10 @@ async Task HandleClientAsync(TcpClient client)
                             if (tryes >= 3)
                             {
                                 bannedClients.Add(client.Client.RemoteEndPoint as IPEndPoint);
-                                Console.WriteLine($"Client {client.Client.RemoteEndPoint as IPEndPoint} has been banned due to too many failed authentication attempts.");
+                                Console.WriteLine($"Клієнт {client.Client.RemoteEndPoint as IPEndPoint} заблокований через велику кількість невдалих спроб автентифікації.");
                                 var response = new RequestType0
                                 {
-                                    Comment = "You have been banned due to too many failed authentication attempts.",
+                                    Comment = "Вас забанили через велику кількість невдалих спроб автентифікації.",
                                     PassCode = 1918
                                 };
                                 byte[] responseBuffer1 = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -189,7 +190,7 @@ async Task HandleClientAsync(TcpClient client)
                             {
                                 var response = new RequestType0
                                 {
-                                    Comment = "Authentication failed",
+                                    Comment = "Помилка автентифікації",
                                     PassCode = 1939
                                 };
                                 byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -208,26 +209,26 @@ async Task HandleClientAsync(TcpClient client)
                             PinCode = request2.PinCode,
 
                         };
-						context.Users.Add(new_user);
-						context.SaveChanges();
-						var balance = new BalanceEntity
-						{
-							UserId = new_user.Id,
-							Amount = 0
-						};
-						context.Balances.Add(balance);
-						context.SaveChanges();
+                        context.Users.Add(new_user);
+                        context.SaveChanges();
+                        var balance = new BalanceEntity
+                        {
+                            UserId = new_user.Id,
+                            Amount = 0
+                        };
+                        context.Balances.Add(balance);
+                        context.SaveChanges();
 
-						user = new_user;
-						isAuthenticated = true;
+                        user = new_user;
+                        isAuthenticated = true;
 
-						var response = new RequestType0
-						{
-							Comment = "Користувача зареєстровано успішно",
-							PassCode = 1945
-						};
-						byte[] responseBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, json_options));
-						await sslStream.WriteAsync(responseBuffer);
+                        var response = new RequestType0
+                        {
+                            Comment = "Користувача зареєстровано успішно",
+                            PassCode = 1945
+                        };
+                        byte[] responseBuffer = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(response, json_options));
+                        await sslStream.WriteAsync(responseBuffer);
                     }
                 }
                 else if (request is RequestType3 request3)
@@ -243,7 +244,7 @@ async Task HandleClientAsync(TcpClient client)
                                 context.SaveChanges();
                                 var response = new RequestType0
                                 {
-                                    Comment = "Transaction successful",
+                                    Comment = "Транзакція успішна",
                                     PassCode = 1945
                                 };
                                 byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -253,7 +254,7 @@ async Task HandleClientAsync(TcpClient client)
                             {
                                 var response = new RequestType0
                                 {
-                                    Comment = "Insufficient funds",
+                                    Comment = "Недостатньо коштів на рахунку",
                                     PassCode = 1939
                                 };
                                 byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -273,7 +274,7 @@ async Task HandleClientAsync(TcpClient client)
                             context.SaveChanges();
                             var response = new RequestType0
                             {
-                                Comment = "Deposit successful",
+                                Comment = "Депозит успішний.",
                                 PassCode = 1945
                             };
                             byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -290,7 +291,7 @@ async Task HandleClientAsync(TcpClient client)
                         {
                             var response = new RequestType0
                             {
-                                Comment = $"Your current balance is {balance.Amount}",
+                                Comment = $"На вашому рахунку: {balance.Amount}",
                                 PassCode = 1945
                             };
                             byte[] responseBuffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(response, json_options));
@@ -300,18 +301,18 @@ async Task HandleClientAsync(TcpClient client)
                 }
                 else
                 {
-                    Console.WriteLine($"Unknown request type: {request.Type}");
+                    Console.WriteLine($"Невідомий тип запиту: {request.Type}");
                 }
             }
         }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Error handling client: {ex.Message}");
+        Console.WriteLine($"Помилка клієнта: {ex.Message}");
     }
     finally
     {
         client.Close();
-        Console.WriteLine("Client disconnected: " + client.Client.RemoteEndPoint);
+        Console.WriteLine($"Клієнт {client.Client.RemoteEndPoint} відєднався");
     }
 }
