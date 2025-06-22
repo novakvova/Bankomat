@@ -158,7 +158,7 @@ async Task HandleClientAsync(TcpClient client)
                     if (user != null)
                     {
                         Console.WriteLine($"Processing RequestType2 for user: {user.FirstName} {user.LastName}");
-                        if ((user.FirstName.Equals(request2.FirstName)) && (user.FatherName.Equals(request2.FatherName)) && (user.LastName.Equals(request2.LastName)))
+                        if ((user.FirstName.Equals(request2.FirstName)) && (user.FatherName.Equals(request2.FatherName)) && (user.LastName.Equals(request2.LastName) && (user.PinCode == request2.PinCode)))
                         {
                             isAuthenticated = true;
                             var response = new RequestType0
