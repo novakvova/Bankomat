@@ -6,7 +6,6 @@ builder.Services.AddSingleton<AtmClientService>();
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
