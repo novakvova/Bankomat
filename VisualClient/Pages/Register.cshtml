@@ -1,0 +1,27 @@
+﻿@page
+@model RegisterModel
+<h2>Реєстрація</h2>
+
+<form method="post">
+    <label for="cardNumber">Номер картки:</label>
+    <input asp-for="CardNumber" id="cardNumber" class="form-input" required />
+
+    <label for="firstName">Ім’я:</label>
+    <input asp-for="FirstName" id="firstName" class="form-input" required />
+
+    <label for="lastName">Прізвище:</label>
+    <input asp-for="LastName" id="lastName" class="form-input" required />
+
+    <label for="fatherName">По-батькові:</label>
+    <input asp-for="FatherName" id="fatherName" class="form-input" required />
+
+    <label for="pin">PIN-код:</label>
+    <input asp-for="PinCode" id="pin" type="password" class="form-input" required />
+
+    <button type="submit" class="btn-primary">Зареєструватися</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert-error">@Model.ErrorMessage</p>
+}

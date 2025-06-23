@@ -1,0 +1,22 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - MyBankomat</title>
+    <link rel="stylesheet" href="~/css/theme.css" />
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between; align-items: center; background-color: #0078d4; color: white; padding: 1rem;">
+        <div style="font-weight: bold;">MyBankomat</div>
+        <nav>
+            <a asp-page="/About" style="color: white; margin-right: 1rem;">Про нас</a>
+            <a asp-page="/Contact" style="color: white; margin-right: 1rem;">Контакт</a>
+            <a asp-page="/Index" style="color: white;">Вихід</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+</body>
+</html>

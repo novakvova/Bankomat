@@ -1,0 +1,17 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Головна";
+}
+<h1>Ласкаво просимо до MyBankomat</h1>
+
+<p>Оберіть дію:</p>
+<div class="action-buttons">
+<form method="get" asp-page="LoginCard">
+    <button type="submit" class="btn-primary">Увійти</button>
+</form>
+
+<form method="get" asp-page="Register">
+    <button type="submit" class="btn-primary">Зареєструватися</button>
+</form>
+</div>

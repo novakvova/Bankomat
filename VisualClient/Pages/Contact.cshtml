@@ -1,0 +1,24 @@
+﻿@page
+@{
+    ViewData["Title"] = "Контакт";
+}
+
+<h2>Зв’яжіться з нами</h2>
+<p>Телефон: +380 66 046 7433</p>
+<p>Email: tararukolga78@gmail.com</p>
+
+<h3>Напишіть нам відгук чи повідомлення</h3>
+
+<form action="https://formspree.io/f/xdkzwlyo" method="POST">
+    <label for="name">Ім’я:</label>
+    <input type="text" name="name" id="name" required />
+
+    <label for="email">Електронна пошта:</label>
+    <input type="email" name="_replyto" id="email" required />
+
+    <label for="message">Повідомлення:</label>
+    <textarea name="message" id="message" rows="5" required></textarea>
+
+    <button type="submit">Надіслати</button>
+</form>
+

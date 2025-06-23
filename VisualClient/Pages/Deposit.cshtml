@@ -1,0 +1,14 @@
+﻿@page
+@model DepositModel
+<h2>Поповнення рахунку</h2>
+
+<form method="post">
+    <label for="depositAmount">Сума (грн):</label>
+    <input asp-for="Sum" id="depositAmount" type="number" step="0.01" min="1" class="form-input" required />
+    <button type="submit" class="btn-primary">Поповнити</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert-error">@Model.ErrorMessage</p>
+}

@@ -1,0 +1,14 @@
+﻿@page
+@model WithdrawModel
+<h2>Зняття коштів</h2>
+
+<form method="post">
+    <label for="withdrawAmount">Сума (грн):</label>
+    <input asp-for="Sum" id="withdrawAmount" type="number" step="0.01" min="1" class="form-input" required />
+    <button type="submit" class="btn-primary">Зняти</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert-error">@Model.ErrorMessage</p>
+}

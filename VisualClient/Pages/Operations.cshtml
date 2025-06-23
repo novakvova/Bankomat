@@ -1,0 +1,20 @@
+﻿@page
+@model OperationsModel
+@{
+    ViewData["Title"] = "Операції банкомату";
+}
+
+<h2>Інформація про рахунок</h2>
+
+@if (Model.ResponseComment != null)
+{
+    <p>@Model.ResponseComment</p>
+}
+else
+{
+    <p class="alert-error">Очікуємо відповідь від банкомату...</p>
+}
+
+<form method="get" asp-page="Dashboard">
+    <button type="submit" class="btn-primary">Повернутись до меню</button>
+</form>

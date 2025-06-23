@@ -1,0 +1,24 @@
+﻿@page
+@model LoginAuthModel
+<h2>Авторизація</h2>
+
+<form method="post">
+    <label for="firstName">Ім’я:</label>
+    <input asp-for="FirstName" id="firstName" class="form-input" required />
+
+    <label for="lastName">Прізвище:</label>
+    <input asp-for="LastName" id="lastName" class="form-input" required />
+
+    <label for="fatherName">По-батькові:</label>
+    <input asp-for="FatherName" id="fatherName" class="form-input" required />
+
+    <label for="pin">PIN-код:</label>
+    <input asp-for="PinCode" id="pin" type="password" class="form-input" required />
+
+    <button type="submit" class="btn-primary">Увійти</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert-error">@Model.ErrorMessage</p>
+}
