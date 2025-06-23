@@ -1,0 +1,14 @@
+﻿@page
+@model LoginCardModel
+<h2>Перевірка картки</h2>
+
+<form method="post">
+    <label for="cardNumber">Номер картки:</label>
+    <input asp-for="CardNumber" id="cardNumber" class="form-input" required />
+    <button type="submit" class="btn-primary">Далі</button>
+</form>
+
+@if (Model.ErrorMessage != null)
+{
+    <p class="alert-error">@Model.ErrorMessage</p>
+}

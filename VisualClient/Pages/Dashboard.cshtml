@@ -1,0 +1,26 @@
+﻿@page
+@model DashboardModel
+@{
+    ViewData["Title"] = "Кабінет клієнта";
+}
+<h1>Привіт, <strong>@Model.UserName</strong></h1>
+
+@if (!string.IsNullOrEmpty(Model.BalanceMessage))
+{
+    <p class="balance-label">
+        Ваш баланс: <span class="balance-amount">@Model.BalanceMessage</span>
+    </p>
+}
+else
+{
+    <p class="alert-error">Не вдалося отримати баланс.</p>
+}
+
+<div class="action-buttons">
+    <form method="get" asp-page="Deposit">
+        <button type="submit" class="btn-primary">Поповнити рахунок</button>
+    </form>
+    <form method="get" asp-page="Withdraw">
+        <button type="submit" class="btn-primary">Зняти кошти</button>
+    </form>
+</div>
