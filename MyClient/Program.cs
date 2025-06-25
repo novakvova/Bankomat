@@ -11,6 +11,8 @@ using System.Text;
 using System.Text.Json;
 using MyPrivate.JSON_Converter;
 using MyClient.JSON_Converter;
+using System.Runtime.ExceptionServices;
+using static System.Collections.Specialized.BitVector32;
 
 Console.InputEncoding = Encoding.UTF8;
 Console.OutputEncoding = Encoding.UTF8;
@@ -35,129 +37,123 @@ try
 	var options = new JsonSerializerOptions();
 	options.Converters.Add(new RequestBaseConverter());
 
-	Console.Write("Введіть номер картки: ");
-	if (!long.TryParse(Console.ReadLine(), out long cardNumber))
-	{
-		Console.WriteLine("Неправильний формат номеру картки.");
-		return;
-	}
-	var request1 = new RequestType1
-	{
-		NumberCard = cardNumber
-	};
-	var response1 = await RequestAsync(stream, request1, options);
-	if (response1 == null || response1.PassCode == 1918 || response1.PassCode == 1914)
-	{
-		Console.WriteLine("Вас заблоковано сервером.");
-		return;
-	}
-	else if (response1.PassCode == 1789)
-	{
-		Console.WriteLine("Картку не знайдено");
-		Console.WriteLine("Чи хочете ви зареєструватись(yes/no)?");
-		var choice = Console.ReadLine();
-		if(choice?.ToLower() == "yes")
-		{
-			Console.Write("Введіть нове Ім’я: "); 
-			string firstName = Console.ReadLine();
-			Console.Write("Введіть нове Прізвище: ");
-			string lastName = Console.ReadLine();
-			Console.Write("Введіть нове По-батькові: ");
-			string fatherName = Console.ReadLine();
-			Console.Write("Введіть новий PIN-код: ");
-			if (!long.TryParse(Console.ReadLine(), out long pinCode))
-			{
-				Console.WriteLine("Невірний формат PIN-коду.");
-				return;
-			}
-			var register = new RequestType2
-			{
-				FirstName = firstName,
-				LastName = lastName,
-				FatherName = fatherName,
-				PinCode = pinCode
-			};
-			var resp = await RequestAsync(stream, register, options);
-			PrintResponse(resp);
-			if (resp?.PassCode != 1945)
-			{
-				return;
-			}
-				
-		}
-		else
-		{
-			return;
-		}
-			
-	}
-	else if (response1.PassCode != 1945)
-	{
-		Console.WriteLine("При перевірці картки сталась помилка");
-		return;
-	}
-	for (int attempt = 1; attempt <= 3; attempt++)
-	{
-		Console.Write("Введіть ваше Ім’я: ");
-		string firstName = Console.ReadLine();
-		if (string.IsNullOrEmpty(firstName))
-        {
-            Console.WriteLine("Ім'я не може бути порожнім.");
-			return;
-        }
+    Console.Write("Бажаєте увійти чи зареєструватись? (login / register): ");
+    string mode = Console.ReadLine()?.ToLower();
 
-        Console.Write("Введіть ваше Прізвище: ");
-		string lastName = Console.ReadLine();
-        if (string.IsNullOrEmpty(lastName))
+    long cardNumber = 0;
+    ServerResponse? response1 = null;
+
+    if (mode == "login")
+    {
+        Console.Write("Введіть номер картки: ");
+        if (!long.TryParse(Console.ReadLine(), out cardNumber))
         {
-            Console.WriteLine("Прізвище не може бути порожнім.");
+            Console.WriteLine("Некоректний номер.");
             return;
         }
 
-        Console.Write("Введіть ваше По-батькові: ");
-		string fatherName = Console.ReadLine();
-        if (string.IsNullOrEmpty(fatherName))
+        var check = new RequestType1 { NumberCard = cardNumber };
+        response1 = await RequestAsync(stream, check, options);
+
+        if (response1?.PassCode == 1789)
         {
-            Console.WriteLine("По-батькові не може бути порожнім.");
+            Console.WriteLine("Картку не знайдено. Зареєструватись? (yes / no): ");
+            string res = Console.ReadLine();
+            if (res?.ToLower() != "yes") return;
+            mode = "register";
+        }
+        else if (response1?.PassCode != 1945)
+        {
+            Console.WriteLine("Сервер відповів помилкою або заблокував вас.");
+            return;
+        }
+    }
+    if (mode == "register")
+    {
+        var rnd = new Random();
+        int a = 10000000, b = 99999999;
+        do
+        {
+            cardNumber = long.Parse($"{rnd.Next(a, b)}{rnd.Next(a, b)}");
+            response1 = await RequestAsync(stream, new RequestType1 { NumberCard = cardNumber }, options);
+        }
+        while (response1?.PassCode == 1945);
+
+        Console.WriteLine($"Ваш новий номер картки: {cardNumber} обовязково запишіть його");
+
+        Console.Write("Ім’я: ");
+        string fname = Console.ReadLine();
+        Console.Write("Прізвище: ");
+        string lname = Console.ReadLine();
+        Console.Write("По-батькові: ");
+        string patr = Console.ReadLine();
+        Console.Write("PIN-код: ");
+        if (!long.TryParse(Console.ReadLine(), out long pin))
+        {
+            Console.WriteLine("Невірний PIN.");
             return;
         }
 
-        Console.Write("Введіть ваш PIN-код: ");
-		if (!long.TryParse(Console.ReadLine(), out long pinCode))
-		{
-			Console.WriteLine("Неправильний формат PIN-коду.");
-			return;
-		}
-		var request2 = new RequestType2
-		{
-			FirstName = firstName,
-			LastName = lastName,
-			FatherName = fatherName,
-			PinCode = pinCode
-		};
-		var response2 = await RequestAsync(stream, request2, options);
-		if (response2?.PassCode == 1945)
-		{
-			Console.WriteLine("Авторизація пройшла успішно.\n");
-			break;
-		}
-		else if (response2?.PassCode == 1918 || response2?.PassCode == 1914)
-		{
-			Console.WriteLine("Сервер заблокував вас за несанкціоновану спробу доступу в аккаунт.");
-			return;
-		}
-		else if (attempt == 3)
-		{
-			Console.WriteLine("\nВи використали ліміт спроб вас заблоковано");
-			return;
-		}
-		else
-		{
-			Console.WriteLine($"Ви ввели неправильні данні. Спробуйте ще раз.\n");
-		}
-		await RequestAsync(stream, request1, options);
-	}
-	while (true)
+        var register = new RequestType2
+        {
+            FirstName = fname,
+            LastName = lname,
+            FatherName = patr,
+            PinCode = pin
+        };
+        var regResp = await RequestAsync(stream, register, options);
+        PrintResponse(regResp);
+        if (regResp?.PassCode != 1945) return;
+    }
+
+    // Авторизація
+    for (int attempt = 1; attempt <= 3; attempt++)
+    {
+        Console.Write("Ім’я: ");
+        string fname = Console.ReadLine();
+        Console.Write("Прізвище: ");
+        string lname = Console.ReadLine();
+        Console.Write("По-батькові: ");
+        string patr = Console.ReadLine();
+        Console.Write("PIN-код: ");
+        if (!long.TryParse(Console.ReadLine(), out long pin))
+        {
+            Console.WriteLine("Невірний PIN.");
+            return;
+        }
+
+        var auth = new RequestType2
+        {
+            FirstName = fname,
+            LastName = lname,
+            FatherName = patr,
+            PinCode = pin
+        };
+        var authResp = await RequestAsync(stream, auth, options);
+
+        if (authResp?.PassCode == 1945)
+        {
+            Console.WriteLine("Авторизація успішна.");
+            break;
+        }
+        else if (authResp?.PassCode == 1918 || authResp?.PassCode == 1914)
+        {
+            Console.WriteLine("Вас заблоковано сервером.");
+            return;
+        }
+        else if (attempt == 3)
+        {
+            Console.WriteLine("Вичерпано спроби.");
+            return;
+        }
+        else
+        {
+            Console.WriteLine("Дані невірні. Спроба #" + attempt);
+        }
+    }
+
+
+    while (true)
 	{
 		Console.WriteLine("\nОберіть запит банкомату:");
 		Console.WriteLine("1 - Зняти кошти");
