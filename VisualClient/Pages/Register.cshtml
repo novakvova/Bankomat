@@ -1,11 +1,21 @@
 ﻿@page
 @model RegisterModel
+@{
+    ViewData["Title"] = "Реєстрація";
+}
+
 <h2>Реєстрація</h2>
 
 <form method="post">
-    <label for="cardNumber">Номер картки:</label>
-    <input asp-for="CardNumber" id="cardNumber" class="form-input" required />
-
+    @if (Model.CardNumber != 0)
+    {
+        <div class="card-number-display">
+            <label>Ваш номер картки:</label>
+            <div class="card-number-text">
+                @Model.CardNumber.ToString("#### #### #### ####")
+            </div>
+        </div>
+    }
     <label for="firstName">Ім’я:</label>
     <input asp-for="FirstName" id="firstName" class="form-input" required />
 
@@ -25,3 +35,5 @@
 {
     <p class="alert-error">@Model.ErrorMessage</p>
 }
+
+

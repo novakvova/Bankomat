@@ -1,4 +1,5 @@
-﻿using System.Net.Security;
+﻿using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
@@ -7,6 +8,7 @@ using VisualClient.Models;
 
 public class AtmClientService
 {
+    //private readonly string _serverIp = IPAddress.Loopback.ToString();
     private readonly string _serverIp = "18.185.184.246"; 
     private readonly int _port = 5000;
     private TcpClient _client;
@@ -31,7 +33,7 @@ public class AtmClientService
                 _stream = new SslStream(_client.GetStream(), false, (_, _, _, _) => true);
                 await _stream.AuthenticateAsClientAsync(_serverIp);
             }
-            
+
             string requestJson = JsonSerializer.Serialize(request, _jsonOptions);
             byte[] requestBytes = Encoding.UTF8.GetBytes(requestJson);
 
@@ -51,7 +53,7 @@ public class AtmClientService
             } while (bytesRead == buffer.Length);
 
             string responseJson = Encoding.UTF8.GetString(ms.ToArray());
-            
+
             var response = JsonSerializer.Deserialize<ServerResponse>(responseJson);
             return response;
         }

@@ -51,6 +51,24 @@ h1, h2 {
     margin-bottom: 1rem;
 }
 
+.card-number-display {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.card-number-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007acc;
+    background-color: #f0f8ff;
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    letter-spacing: 2px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.4s ease-in;
+}
+
 form {
     background: white;
     padding: 2rem;
@@ -68,6 +86,7 @@ label {
     margin-bottom: 0.4rem;
     font-weight: 600;
 }
+
 .balance-label {
     margin-top: 1rem;
     font-size: 1.2rem;
@@ -110,12 +129,13 @@ button {
         background-color: #005fa3;
         transform: translateY(-2px);
     }
+
 .action-buttons {
     display: flex;
     gap: 1rem;
     flex-flow: row;
     justify-content: center;
-    width:80%;
+    width: 80%;
 }
 
     .action-buttons form {

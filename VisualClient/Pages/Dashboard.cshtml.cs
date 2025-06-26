@@ -14,10 +14,8 @@ public class DashboardModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         if (HttpContext.Session.GetString("Authorized") != "true")
-            return RedirectToPage("LoginCard");
-
+            return RedirectToPage("/LoginCard");
         UserName = HttpContext.Session.GetString("UserName") ?? " Î≥∫ÌÚ";
-
         var resp = await _atm.SendAsync(new RequestType5());
 
         if (resp?.PassCode == 1945)

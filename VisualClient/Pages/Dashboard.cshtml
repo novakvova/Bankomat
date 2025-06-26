@@ -4,7 +4,7 @@
     ViewData["Title"] = "Кабінет клієнта";
 }
 <h1>Привіт, <strong>@Model.UserName</strong></h1>
-
+<p class="balance-label">Ваш номер картки: <span class="balance-amount"> @HttpContext.Session.GetString("CardNumber")</span></p>
 @if (!string.IsNullOrEmpty(Model.BalanceMessage))
 {
     <p class="balance-label">
