@@ -19,11 +19,11 @@ public class RegisterModel : PageModel
     {
         if (TempData["CardNumber"] is not string cardNumber || !long.TryParse(cardNumber, out var numberCard))
         {
-            return RedirectToPage("LoginCard");
+            number = long.Parse($"{rnd.Next(a, b)}{rnd.Next(a, b)}");
         }
-        var check = await _atm.SendAsync(new RequestType1 { NumberCard = numberCard });
+        while (response?.PassCode == 1945);
 
-        if (check?.PassCode == 1945)
+        CardNumber = number;
         {
             ErrorMessage = "Картка вже існує.";
             return Page();
