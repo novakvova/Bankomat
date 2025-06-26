@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.Mvc;
 using MyPrivate.JSON_Converter;
-
 
 public class LoginAuthModel : PageModel
 {
@@ -17,38 +16,31 @@ public class LoginAuthModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (TempData["CardNumber"] is not string cardNumber || !long.TryParse(cardNumber, out var numberCard))
+        var cardNumberStr = HttpContext.Session.GetString("CardNumber");
+
+        if (string.IsNullOrEmpty(cardNumberStr) || !long.TryParse(cardNumberStr, out var cardNumber))
         {
-            return RedirectToPage("LoginCard");
+            ErrorMessage = "Сеанс входу не знайдено. Спробуйте спочатку.";
+            return RedirectToPage("/LoginCard");
         }
-        var request = new RequestType2
+
+        var response = await _atm.SendAsync(new RequestType2
         {
-            NumberCard = numberCard,
+            NumberCard = cardNumber,
             FirstName = FirstName,
             LastName = LastName,
             FatherName = FatherName,
             PinCode = PinCode
-        };
+        });
 
-        var resp = await _atm.SendAsync(request);
-
-        if (resp?.PassCode == 1945)
+        if (response == null || response.PassCode != 1945)
         {
-            HttpContext.Session.SetString("Authorized", "true");
-            HttpContext.Session.SetString("UserName", FirstName);
-            HttpContext.Session.SetString("CardNumber", numberCard.ToString());
-
-            ModelState.Clear();
-            return RedirectToPage("Dashboard");
-        }
-
-        if (resp?.PassCode is 1914 or 1918)
-        {
-            ErrorMessage = "Доступ заблоковано сервером.";
+            ErrorMessage = "Невірні дані. Спробуйте ще раз.";
             return Page();
         }
 
-        ErrorMessage = "Невірні дані. Спробуйте знову.";
-        return Page();
+        HttpContext.Session.SetString("Authorized", "true");
+        HttpContext.Session.SetString("UserName", FirstName);
+        return RedirectToPage("/Dashboard");
     }
 }

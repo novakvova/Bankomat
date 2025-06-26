@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MyPrivate.JSON_Converter;
+using VisualClient.Models;
 
 public class LoginCardModel : PageModel
 {
     private readonly AtmClientService _atm;
+
     public LoginCardModel(AtmClientService atm) => _atm = atm;
 
     [BindProperty]
@@ -14,23 +16,16 @@ public class LoginCardModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var resp = await _atm.SendAsync(new RequestType1 { NumberCard = CardNumber });
+        var response = await _atm.SendAsync(new RequestType1 { NumberCard = CardNumber });
 
-        if (resp == null || resp.PassCode is 1914 or 1918)
+        if (response == null || response.PassCode != 1945)
         {
-            ErrorMessage = "Сервер заблокував вас.";
-            return Page();
+
+            return RedirectToPage("/CardNotFound");
         }
+        HttpContext.Session.SetString("CardNumber", CardNumber.ToString());
+        return RedirectToPage("/LoginAuth");
 
-        TempData["CardNumber"] = CardNumber.ToString();
-
-        if (resp.PassCode == 1789)
-            return RedirectToPage("Register");
-
-        if (resp.PassCode == 1945)
-            return RedirectToPage("LoginAuth");
-
-        ErrorMessage = "Невідома відповідь.";
-        return Page();
     }
+
 }

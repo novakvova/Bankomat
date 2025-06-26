@@ -1,0 +1,18 @@
+﻿@page
+@model CardNotFoundModel
+
+<h2>Номер картки не знайдено</h2>
+
+<p>
+    Ви ввели неіснуючу картку.<br />
+    Бажаєте зареєструватися або спробувати ще раз?
+</p>
+
+<div class="action-buttons">
+    <form method="get" asp-page="/Register">
+        <button class="btn-primary">Перейти до реєстрації</button>
+    </form>
+    <form method="get" asp-page="/LoginCard">
+        <button class="btn-primary">Спробувати ще раз</button>
+    </form>
+</div>
